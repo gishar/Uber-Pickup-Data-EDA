@@ -1,0 +1,93 @@
+---
+title: "Uber Pickups Data Analysis"
+author: "Gishar!"
+date: "1/11/2023"
+output: html_document
+---
+***
+
+# Why this project?
+<h5 style="margin-bottom: 5pt;"> I have been looking around to find something hands-on which would help me learn multiple things together: </h5>
+* R programming, and in particular visualization
+* Data analysis
+* Data science, mainly regression modeling at this point for now, and
+* learn to do things in an R-markdown file, so I could post it online in a nice form (best I can at least)
+
+So I came across this [website](https://data-flair.training/blogs/machine-learning-datasets/), where there was a ton of different projects I could pick up from and go from there. So, out of all of those, I chose the [Uber Data Analysis Project](https://data-flair.training/blogs/r-data-science-project-uber-data-analysis/) to follow along. This is mainly because I am a traffic engineer and this kind of data just makes more sense to me!
+
+## Step 1 - Install and/or load the required packages
+In this project it seems that we I will need a bunch of packages including `ggplot2`, `ggthemes`, `lubridate`, `dplyr`, `tidyr`, `DT`, and `scales`.
+
+### What are the packages used for:
+
+|Package (library)  | Usage 
+|:---------------   | :------------
+|`ggplot2`          | Visualization
+|`ggthemes`         | Creating nice graph themes for visualizations
+|`lubridate`        | To help with the date and time values
+|`dplyr`            | To manipulate data
+|`tidyr`            | To tidy up the data 
+|`DT`               | An interface to DataTables library: see this [page](https://rstudio.github.io/DT/)
+|`scales`           | For scaling the data in graphs: see this [page](https://scales.r-lib.org/)
+|`RColorBrewer`     | For the readily avaialble color pallettes to use in visualizations
+
+(I know the package `tidyverse` —look [here](https://www.tidyverse.org/packages/)— already includes `ggplot2`, `dplyr`, and `tidyr`), so I'll just install/load all (thanks to [Shane](https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) for this tip).
+
+P.S. I am adding another library to brew some colors in nice color palettes. It's called `RColorBrewer`
+
+```{r}
+list.of.packages <- c("tidyverse", "ggthemes", "lubridate", "DT", "scales", "RColorBrewer")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+if(length(new.packages)) install.packages(new.packages)
+```
+
+## Step 2 - Reading Data In
+we have 6 months of data. I am going to use the name of the months as the name of the datasets and read into them. Note, the files should be saved in the same directory as the R code (or markdown) file.
+
+```{r}
+# Apr <- read.csv("uber-raw-data-apr14.csv")
+# May <- read.csv("uber-raw-data-may14.csv")
+# Jun <- read.csv("uber-raw-data-jun14.csv")
+# Jul <- read.csv("uber-raw-data-jul14.csv")
+# Aug <- read.csv("uber-raw-data-aug14.csv")
+# Sep <- read.csv("uber-raw-data-sep14.csv")
+```
+
+
+
+
+## Step 3 - 
+
+```{r}
+
+```
+
+## Step 4 - 
+
+```{r}
+
+```
+
+## Step 5 - 
+
+```{r}
+
+```
+
+## Step 6 - 
+
+```{r}
+
+```
+
+## Step 7 - 
+
+```{r}
+
+```
+
+
+
+```{r}
+sessioninfo::session_info()
+```
