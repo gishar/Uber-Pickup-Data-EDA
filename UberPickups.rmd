@@ -15,10 +15,10 @@ output: html_document
 
 So I came across this [website](https://data-flair.training/blogs/machine-learning-datasets/), where there was a ton of different projects I could pick up from and go from there. So, out of all of those, I chose the [Uber Data Analysis Project](https://data-flair.training/blogs/r-data-science-project-uber-data-analysis/) to follow along. This is mainly because I am a traffic engineer and this kind of data just makes more sense to me!
 
-## Step 1 - Install and/or load the required packages
+# Step 1 - Install and/or load the required packages
 In this project it seems that we I will need a bunch of packages including `ggplot2`, `ggthemes`, `lubridate`, `dplyr`, `tidyr`, `DT`, and `scales`.
 
-### What are the packages used for:
+## What are the packages used for:
 
 |Package (library)  | Usage 
 |:---------------   | :------------
@@ -29,65 +29,270 @@ In this project it seems that we I will need a bunch of packages including `ggpl
 |`tidyr`            | To tidy up the data 
 |`DT`               | An interface to DataTables library: see this [page](https://rstudio.github.io/DT/)
 |`scales`           | For scaling the data in graphs: see this [page](https://scales.r-lib.org/)
-|`RColorBrewer`     | For the readily avaialble color pallettes to use in visualizations
+|`RColorBrewer`     | For the readily available color palettes (3-12 colors) to use in visualizations. See this [page] (https://earlglynn.github.io/RNotes/package/RColorBrewer/index.html)
 
-(I know the package `tidyverse` —look [here](https://www.tidyverse.org/packages/)— already includes `ggplot2`, `dplyr`, and `tidyr`), so I'll just install/load all (thanks to [Shane](https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) for this tip).
+I know the package `tidyverse` —look [here](https://www.tidyverse.org/packages/)— already includes `ggplot2`, `dplyr`, and `tidyr`, so I'll just install/load all using this trick [Shane](https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) posted.
 
 P.S. I am adding another library to brew some colors in nice color palettes. It's called `RColorBrewer`
 
-```{r}
+```{r, echo = T, results = 'hide', message = F}
 list.of.packages <- c("tidyverse", "ggthemes", "lubridate", "DT", "scales", "RColorBrewer")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
 if(length(new.packages)) install.packages(new.packages)
+lapply(list.of.packages, require, character.only = T) # to load multiple packages at once
 ```
 
-## Step 2 - Reading Data In
-we have 6 months of data. I am going to use the name of the months as the name of the datasets and read into them. Note, the files should be saved in the same directory as the R code (or markdown) file.
+# Step 2 - Reading Data In
+We have 6 months of data. I am going to use the name of the months as the name of the datasets and read into them. Note, the files should be saved in the same directory as the R code (or markdown) file.
 
-```{r}
-# Apr <- read.csv("uber-raw-data-apr14.csv")
-# May <- read.csv("uber-raw-data-may14.csv")
-# Jun <- read.csv("uber-raw-data-jun14.csv")
-# Jul <- read.csv("uber-raw-data-jul14.csv")
-# Aug <- read.csv("uber-raw-data-aug14.csv")
-# Sep <- read.csv("uber-raw-data-sep14.csv")
+```{r, echo = T}
+Apr <- read.csv("uber-raw-data-apr14.csv")
+May <- read.csv("uber-raw-data-may14.csv")
+Jun <- read.csv("uber-raw-data-jun14.csv")
+Jul <- read.csv("uber-raw-data-jul14.csv")
+Aug <- read.csv("uber-raw-data-aug14.csv")
+Sep <- read.csv("uber-raw-data-sep14.csv")
 ```
 
+Now we combine them all into one database stakcing them on top of each other. I'm just going to call it Uber. Also, becuase I am a bit obsessive about a clean work environment, going to clean up the redundant objects
+```{r, echo = T}
+Uber <- rbind(Apr, May, Jun, Jul, Aug, Sep)
+rm(Apr, May, Jun, Jul, Aug, Sep, list.of.packages, new.packages)
+head(Uber, 3)
+```
 
+Since the data and time column is in the string type, we need to convert that to Date-Time (The POSIX class) type. That is done using the `as.POSIXct` command. This [page](https://www.neonscience.org/resources/learning-hub/tutorials/dc-convert-date-time-posix-r) seems to be a good source for it! 
 
+```{r, echo = T}
+Uber$Date.Time <- as.POSIXct(Uber$Date.Time, format = "%m/%d/%Y %H:%M:%S")
+head(Uber, 3)
+```
 
-## Step 3 - 
+In order to understand and compare the trip distributions or patterns in various time frames such as hours, days, weeks, etc. we can extract the minutes, hours, days, etc. from the *Date.Time* variable (that is now in standard form) and then extract count or any other summaries of data for each of those time frame aggregations. This will be done by using the corresponding functions from the `lubridate` library.
 
-```{r}
+```{r, echo = T}
+Uber$Year <- factor(year(Uber$Date.Time))                        # Extract year into a new factor variable
+Uber$Month <- factor(month(Uber$Date.Time, label = TRUE))        # Extract month (will have 12 levels)
+Uber$Day <- factor(day(Uber$Date.Time))                          # Extract day of month (31 levels)
+Uber$DayOfWeek <- factor(wday(Uber$Date.Time, label = TRUE))     # Extract day of week (7 levels)
+```
+
+In order to get the hourly and minutely (if that's a word) data aggregation, similar to what was done to the Day to Year variables we needto make Hour, Minute, and Second variables; but first we need to get the *time* out of the *Date.Time* variable using the `hms` function from `lubridate` library to make a *period object*. Then, corresponding functions can be used to extract the time periods from this object into new variables.
+
+```{r, echo = T}
+Uber$Time <- format(Uber$Date.Time, format="%H:%M:%S")    # Extract "Time" from "Date.Time"
+Uber$Hour <- factor(hour(hms(Uber$Time)))                 # Extract hour into a new factor variable (24 levels)
+Uber$Minute <- factor(minute(hms(Uber$Time)))             # Extract minutes
+Uber$Second <- factor(second(hms(Uber$Time)))             # Extract seconds
+Uber <- Uber[c(1, 5:8, 10:12, 4, 2:3)]                    # Rearranging columns into nicer order
+head(Uber, 3)
+```
+
+# Step 3 - Visualizattions
+## Trips by Months
+As part of this process, some data aggregation needs to be done over a time period, so the number of trips during that time period can be plotted against the time period. For that purpose, we will use some functions from the `dplyr` library and the Pipe Operation (see this nice [page](https://www.statology.org/pipe-in-r/) for pipe)
+
+```{r message = F}
+Uber %>%
+     group_by(Month) %>%
+     summarize(Number.Of.Trips = n()) %>%
+     ggplot(aes(Month, Number.Of.Trips)) +
+     geom_bar(stat = "identity", fill = "thistle", color = "black") +
+     labs(title="Total number of trips per month",
+          y = "Total number of trips") +
+     theme_bw() +
+     scale_y_continuous(labels = comma)      # to have a nice looking y-axis
+```
+
+## Trips by Hours
+```{r message = F}
+Uber %>%
+     group_by(Hour) %>%
+     summarize(Number.Of.Trips = n()) %>%
+     ggplot(aes(Hour, Number.Of.Trips)) +
+     geom_bar(stat = "identity", fill = "coral4", color = "black") +
+     labs(title="Total number of trips",
+          subtitle="(sum of trips per hour over 6 months)",
+          y = "Total number of trips") +
+     theme_bw() +
+     scale_y_continuous(labels = comma)
+```
+
+P.S. I realized the above code that used `dplyr` aggregation function `summarize()` could be skipped since `geom_bar()` itself inherently does that, similar to the base `barplot()` function. That is why the `stat = "identity"` has to be noted down to tell `geom_bar()` to take our y values. Therefore, the above could be written as the following too (although I noticed it takes a bit more time to run):
+
+```{r, message = F, echo = T}
+Uber %>%
+     ggplot(aes(Hour)) +
+     geom_bar(fill = "steelblue", color = "black") +
+     labs(title="Total number of trips",
+          subtitle="Sum of trips per hour over 6 months",
+          y = "Total number of trips") +
+     theme_bw() +
+     scale_y_continuous(labels = comma)
+```
+
+This graph already shows us the two local peaks of the trips in the AM (7-9) and PM (5-7) rush hours. Of course this can be further broken down to the minutes levels to see if e.g. it would be something like 4:45-6:30 for the pm. Each bar shows the total number of trips happened for that hour summed up over 6 months. How about we dissect each bar into colors to show trips corresponding to each month. This can help us learn some more tricks on visualizations.
+
+### Trips by hours for each months
+```{r, message = F}
+Uber %>%
+     group_by(Month, Hour) %>%
+     summarise(Number.Of.Trips = n()) %>%
+     ggplot(aes(Hour, Number.Of.Trips, fill = Month)) +
+     scale_fill_manual(values = brewer.pal(6, "Spectral")) +    # to use my own colors
+     geom_bar(stat = "identity", color = "black") +
+     labs(title="Total number of trips",
+          subtitle="sum of trips per hour over 6 months",
+          y = "Total number of trips") +
+     theme_classic() +                       # just for a change!
+     scale_y_continuous(labels = comma)
+```
+
+<h5 style="margin-bottom: 5pt;"> Similar types of graph can be generated for: </h5>
+* Trips per month
+* Trips per day (then segmented by months, hours, etc.)
+* Trips per day of week (maybe segmented by months, etc.)
+
+### Trips by days of the month/week (multiple examples)
+Let's try to look at the daily number of trips, segmented by months. i.e. number of trips on the first day of the month for each of the months, and then do the opposite, i.e number of trips for each month segmented by days:
+
+```{r message = F}
+# Trips in day of month over all 6 months, segmented by month
+Uber %>% 
+     group_by(Month, Day) %>% 
+     summarise(Number.Of.Trips = n()) %>% 
+     ggplot(aes(Day, Number.Of.Trips, fill = Month)) +
+     scale_fill_manual(values = brewer.pal(6, "Blues")) +
+     geom_bar(stat = "identity", color = "black") +
+     labs(title="Total number of trips",
+          subtitle="sum of trips per day of month over 6 months",
+          y = "Total number of trips") +
+     theme_classic() +                       
+     scale_y_continuous(labels = comma)
+```
+
+```{r message = F}
+# Trips in each months segmented by days of months
+Uber %>% 
+     group_by(Month, Day) %>% 
+     summarise(Number.Of.Trips = n()) %>% 
+     ggplot(aes(Month, Number.Of.Trips, fill = Day)) +
+     # scale_fill_manual(values = brewer.pal(30, "Accent")) +
+     geom_bar(position="stack", stat = "identity", color = "black") +
+     labs(title="Total number of trips",
+          subtitle="sum of trips per month segmented by sum of trips in each day of month",
+          y = "Total number of trips") +
+     theme_classic() +                       
+     scale_y_continuous(labels = comma)      
+```
+
+```{r message = F}
+Uber %>%
+     group_by(Month, DayOfWeek) %>%
+     dplyr::summarize(Total = n()) %>% 
+     ggplot(aes(DayOfWeek, Total, fill = Month)) + 
+     scale_fill_manual(values = brewer.pal(6, "Greens")) +
+     geom_bar(position="dodge", stat = "identity", color = "black") +        # to have a separate bar for each month (fill = month in aes)
+     ggtitle("Trips by Day of the Week and Month") +
+     scale_y_continuous(labels = comma)
+```
+
+```{r message = F}
+Uber %>%
+     group_by(DayOfWeek, Month) %>%
+     dplyr::summarize(Total = n()) %>% 
+     ggplot(aes(Month, Total, fill = DayOfWeek)) + 
+     scale_fill_manual(values = brewer.pal(7, "Greys")) +
+     geom_bar(position="dodge", stat = "identity", color = "black") +        # to have a separate bar for each month (fill = month in aes)
+     ggtitle("Trips by Day of the Week and Month") +
+     scale_y_continuous(labels = comma)
+```
+Based on the visualizations, one could make some quick observations about the minimum or maximum number of trips happening during what times of day, days of week, etc. and target marketing efforts towards those periods, etc. that's how EDA works anyway. 
+
+## Heat Maps
+Let's do some heat maps for the number of trips changing over two axis with the nature of time, e.g. days on x, and hours on y, or months on x and days on y (which makes more sense than the other one combining trips over 6 months for each hour of a certain day!). Oh and I found this [page](https://r-charts.com/correlation/heat-map-ggplot2/) that was really helpful. I'm sure I'll revisit.
+
+```{r message = F}
+Uber %>% 
+     group_by(Month, Day) %>% 
+     summarise(Total.Trips = n()) %>% 
+     datatable(rownames = F,                                     # to try out datatable command and see results in html form output
+               colnames = c("Month", "Day of Month", 'Number of Trips'),
+               caption = "Number of trips in each day of month",
+               options = list(pageLength = 5, 
+                              autoWidth = TRUE
+               ))
 
 ```
 
-## Step 4 - 
-
-```{r}
-
-```
-
-## Step 5 - 
-
-```{r}
-
-```
-
-## Step 6 - 
-
-```{r}
+```{r message = F}
+Uber %>% 
+     group_by(Month, Day) %>% 
+     summarise(Total.Trips = n()) %>% 
+     ggplot(aes(Month, Day, fill = Total.Trips)) +
+     # scale_fill_manual(values = brewer.pal(7, "Greys")) +
+     geom_tile(color = "black") +
+     scale_fill_gradient(low = "white", high = "darkred") +
+     geom_text(aes(label = Total.Trips), size = 2)
+     ggtitle("Heat Map by Month and Day")
 
 ```
 
-## Step 7 - 
+## Trips on the map
+This is a lot of point to show on the map but just to see how it looks like I am going to use a random sample of 2000 trips and map it.
 
-```{r}
+```{r message = F}
+minlat = min(Uber$Lat)
+minlon = min(Uber$Lon)
+maxlat = max(Uber$Lat)
+maxlon = max(Uber$Lon)
 
+Uber[sample(1:nrow(Uber), 2000),] %>%
+  ggplot(aes(x=Lon, 
+             y=Lat, 
+             color = Month)) +
+  geom_point(size = 1) +
+  scale_x_continuous(limits = c(minlon, maxlon)) +
+  scale_y_continuous(limits = c(minlat, maxlat)) +
+  theme_map() +
+  ggtitle("NYC MAP BASED ON UBER RIDES DURING 2014 (APR-SEP)")
+
+rm(minlat, minlon, maxlat, maxlon)
 ```
 
+# Final comments, the beginning of a new season
+Now that I am at this point, I don't think this was the best example to follow. I learned from it but I still think many of the graphs made may not be the most useful graphs. distribution of hourly trips within a day would be nice to see but *total number of trips* happened at 7-8 am summed up over many days and month has little value. It could be *average number of hourly trips*. This would provide a more sensible number in the chart. for that I modified the codes to some extent to get average values and of course this can be expanded to create similar charts like above for average or median or any other measures of central tendencies we want to know about these trips.
+Sure this is now providing me with an even better insight than trips in a single day, which could be used as the expected value of the trips at a specific hour which can be used in planning, modeling, predicting, design, etc. 
+Anyhow, I tried to follow the reference webpage I noted at the top to do some visualization and learn/practice the rmd file and I am thankful for it.
+
+```{r, message = F}
+Uber %>%
+  group_by(Year, Month, Day, Hour) %>%
+  summarize(Trips = n()) %>% 
+  group_by(Hour) %>% 
+  summarise(AvgTrips = mean(Trips)) %>% 
+     ggplot(aes(Hour, AvgTrips)) +
+     geom_bar(stat = "identity", fill = "darkcyan", color = "black") +
+     labs(title="Average hourly number of trips",
+       subtitle="(averaged over 6 months, Apr through Sep of 2014)",
+       y = "Average number of trips") +
+     theme_bw() +
+     scale_y_continuous(labels = comma)
+```
+
+Or maybe take it even a level higher and look at the distribution of hourly trips over the 6 months, e.g. see the interquartile range of number of trips, minimum or maximum number of trips, etc. using boxplots.
+
+```{r, message = F}
+Uber %>%
+  group_by(Year, Month, Day, Hour) %>%
+  summarize(Trips = n()) %>% 
+     ggplot(aes(x=Hour, 
+           y=Trips)) + 
+  geom_boxplot(fill = "brown4")
+```
+I think this was a good exercise. I will continue on a different dataset, most likely a traffic accident dataset.
 
 
-```{r}
+```{r, echo = T, message = F, eresults = 'hide'}
 sessioninfo::session_info()
 ```
