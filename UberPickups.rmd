@@ -263,7 +263,7 @@ rm(minlat, minlon, maxlat, maxlon)
 # Final comments, the beginning of a new season
 Now that I am at this point, I don't think this was the best example to follow. I learned from it but I still think many of the graphs made may not be the most useful graphs. distribution of hourly trips within a day would be nice to see but *total number of trips* happened at 7-8 am summed up over many days and month has little value. It could be *average number of hourly trips*. This would provide a more sensible number in the chart. for that I modified the codes to some extent to get average values and of course this can be expanded to create similar charts like above for average or median or any other measures of central tendencies we want to know about these trips.
 Sure this is now providing me with an even better insight than trips in a single day, which could be used as the expected value of the trips at a specific hour which can be used in planning, modeling, predicting, design, etc. 
-Anyhow, I tried to follow the reference webpage I noted at the top to do some visualization and learn/practice the rmd file and I am thankful for it.
+Anyhow, I tried to follow the reference webpage I noted at the top to do some visualization. I skipped many of the chart makings due their repetitive nature but I learned/practiced the rmd file and I am thankful for it.
 
 ```{r, message = F}
 Uber %>%
