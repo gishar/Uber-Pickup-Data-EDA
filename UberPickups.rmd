@@ -41,17 +41,20 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, 
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only = T) # to load multiple packages at once
 ```
+```{r}
+x <- read.csv("Data/uber-raw-data-apr14.csv")
+```
 
 # Step 2 - Reading Data In
 We have 6 months of data. I am going to use the name of the months as the name of the datasets and read into them. Note, the files should be saved in the same directory as the R code (or markdown) file.
 
 ```{r, echo = T}
-Apr <- read.csv("uber-raw-data-apr14.csv")
-May <- read.csv("uber-raw-data-may14.csv")
-Jun <- read.csv("uber-raw-data-jun14.csv")
-Jul <- read.csv("uber-raw-data-jul14.csv")
-Aug <- read.csv("uber-raw-data-aug14.csv")
-Sep <- read.csv("uber-raw-data-sep14.csv")
+Apr <- read.csv("Data/uber-raw-data-apr14.csv")
+May <- read.csv("Data/uber-raw-data-may14.csv")
+Jun <- read.csv("Data/uber-raw-data-jun14.csv")
+Jul <- read.csv("Data/uber-raw-data-jul14.csv")
+Aug <- read.csv("Data/uber-raw-data-aug14.csv")
+Sep <- read.csv("Data/uber-raw-data-sep14.csv")
 ```
 
 Now we combine them all into one database stakcing them on top of each other. I'm just going to call it Uber. Also, becuase I am a bit obsessive about a clean work environment, going to clean up the redundant objects
